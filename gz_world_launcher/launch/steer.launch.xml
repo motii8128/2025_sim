@@ -1,0 +1,26 @@
+<launch>
+    <arg name="world_path" default="$(find-pkg-share gz_world_launcher)/world/steer.sdf"/>
+
+    <executable cmd="gz sim $(var world_path)" output="screen"/>
+
+    <include file="$(find-pkg-share gz_world_launcher)/launch/swerve_driver.launch.xml"/>
+
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /fl_steer_joint@std_msgs/msg/Float64@gz.msgs.Double" output="screen"/>
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /fr_steer_joint@std_msgs/msg/Float64@gz.msgs.Double" output="screen"/>
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /rl_steer_joint@std_msgs/msg/Float64@gz.msgs.Double" output="screen"/>
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /rr_steer_joint@std_msgs/msg/Float64@gz.msgs.Double" output="screen"/>
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /fl_wheel_joint/cmd_vel@std_msgs/msg/Float64@gz.msgs.Double" output="screen"/>
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /fr_wheel_joint/cmd_vel@std_msgs/msg/Float64@gz.msgs.Double" output="screen"/>
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /rl_wheel_joint/cmd_vel@std_msgs/msg/Float64@gz.msgs.Double" output="screen"/>
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /rr_wheel_joint/cmd_vel@std_msgs/msg/Float64@gz.msgs.Double" output="screen"/>
+
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /steer_state@sensor_msgs/msg/JointState@gz.msgs.Model" output="screen"/>
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /wheel_state@sensor_msgs/msg/JointState@gz.msgs.Model" output="screen"/>
+
+    <executable cmd="ros2 run ros_gz_bridge parameter_bridge /lidar@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan" output="screen"/>
+
+    <!-- <node pkg="teleop_twist_keyboard" exec="teleop_twist_keyboard" output="screen">
+    </node> -->
+
+    <!-- <include file="$(find-pkg-share gz_world_launcher)/launch/auto.launch.xml"/> -->
+</launch>

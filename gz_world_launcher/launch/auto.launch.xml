@@ -1,0 +1,21 @@
+<launch>
+    <node pkg="linear_path_planner" exec="linear_path_planner_node">
+        <remap from="/target" to="/goal_pose"/>
+        <remap from="/current" to="/localization/current"/>
+        <remap from="/path" to="/planning/path"/>
+
+        <param name="step_size" value="5.0"/>
+    </node>
+
+    <node pkg="pid_local_planner" exec="pid_local_planner_node">
+        <remap from="/path" to="/planning/path"/>
+        <remap from="/current_pose" to="/localization/current"/>
+        <remap from="/cmd_vel" to="/cmd_vel"/>
+
+        <param name="p_gain" value="1.0"/>
+        <param name="i_gain" value="0.001"/>
+        <param name="d_gain" value="0.001"/>
+        <param name="max_limit" value="1.8"/>
+        <param name="min_limit" value="-1.8"/>
+    </node>
+</launch>

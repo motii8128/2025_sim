@@ -1,0 +1,220 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <world name="simple_world">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors"/>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <pose>10 0 0 1.57 0 3.14</pose>
+          <geometry>
+            <mesh>
+              <uri>field2025.obj</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>       <!-- 摩擦係数（静止） -->
+                <mu2>1.0</mu2>     <!-- 摩擦係数（動摩擦） -->
+              </ode>
+            </friction>
+            <contact>
+              <ode>
+                <kp>100</kp>       <!-- バネ定数：硬さ -->
+                <kd>1.0</kd>       <!-- ダンパー：跳ね返り抑える -->
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <pose>10 0 0 1.57 0 3.14</pose>
+          <geometry>
+            <mesh>
+              <uri>field2025.obj</uri>
+              <scale>1 1 1</scale>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="Robot">
+      <static>false</static>
+      <pose>-0.1 -0.65 0.1 0 0 0</pose>
+
+      <link name="base_link">
+        <inertial>
+          <mass>28.0</mass>
+          <inertia>
+            <ixx>0.001</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.001</iyy><iyz>0</iyz><izz>0.001</izz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry><box><size>0.8 0.8 0.14</size></box></geometry>
+          <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.8 0.8 0.14</size></box></geometry>
+        </collision>
+
+        <sensor name="lidar" type="gpu_lidar">
+          <pose>0.4 0 0.0 0 0 0</pose>
+          <topic>lidar</topic>
+          <update_rate>10</update_rate>
+          <lidar>
+              <scan>
+                  <horizontal>
+                      <samples>360</samples>
+                      <resolution>1</resolution>
+                      <min_angle>-3.14</min_angle>
+                      <max_angle>3.14</max_angle>
+                  </horizontal>
+              </scan>
+              <range>
+                  <min>0.02</min>
+                  <max>12.0</max>
+                  <resolution>0.01</resolution>
+              </range>
+              <noise>
+                  <type>gaussian</type>
+                  <mean>0.0</mean>
+                  <stddev>0.01</stddev>
+              </noise>
+          </lidar>
+          <visualize>true</visualize>
+          <always_on>1</always_on>
+        </sensor>
+      </link>
+
+      <!-- FL -->
+      <link name="fl_steer_link"><pose relative_to="base_link">0.4 0.4 0 0 0 0</pose></link>
+      <link name="fl_wheel"><pose relative_to="fl_steer_link">0 0 0 -1.5708 0 0</pose>
+        <inertial>
+          <mass>0.5</mass>
+        </inertial>
+        <visual name="visual"><geometry><cylinder><radius>0.1</radius><length>0.05</length></cylinder></geometry></visual>
+        <collision name="collision"><geometry><cylinder><radius>0.1</radius><length>0.05</length></cylinder></geometry></collision>
+      </link>
+      <joint name="fl_steer_joint" type="revolute"><parent>base_link</parent><child>fl_steer_link</child><axis><xyz>0 0 1</xyz></axis></joint>
+      <joint name="fl_wheel_joint" type="revolute"><parent>fl_steer_link</parent><child>fl_wheel</child><axis><xyz>0 0 1</xyz></axis></joint>
+
+      <!-- FR -->
+      <link name="fr_steer_link"><pose relative_to="base_link">0.4 -0.4 0 0 0 0</pose></link>
+      <link name="fr_wheel"><pose relative_to="fr_steer_link">0 0 0 -1.5708 0 0</pose>
+        <inertial>
+          <mass>0.5</mass>
+        </inertial>
+        <visual name="visual"><geometry><cylinder><radius>0.1</radius><length>0.05</length></cylinder></geometry></visual>
+        <collision name="collision"><geometry><cylinder><radius>0.1</radius><length>0.05</length></cylinder></geometry></collision>
+      </link>
+      <joint name="fr_steer_joint" type="revolute"><parent>base_link</parent><child>fr_steer_link</child><axis><xyz>0 0 1</xyz></axis></joint>
+      <joint name="fr_wheel_joint" type="revolute"><parent>fr_steer_link</parent><child>fr_wheel</child><axis><xyz>0 0 1</xyz></axis></joint>
+
+      <!-- RL -->
+      <link name="rl_steer_link"><pose relative_to="base_link">-0.4 0.4 0 0 0 0</pose></link>
+      <link name="rl_wheel"><pose relative_to="rl_steer_link">0 0 0 -1.5708 0 0</pose>
+        <inertial>
+          <mass>0.5</mass>
+        </inertial>
+        <visual name="visual"><geometry><cylinder><radius>0.1</radius><length>0.05</length></cylinder></geometry></visual>
+        <collision name="collision"><geometry><cylinder><radius>0.1</radius><length>0.05</length></cylinder></geometry></collision>
+      </link>
+      <joint name="rl_steer_joint" type="revolute"><parent>base_link</parent><child>rl_steer_link</child><axis><xyz>0 0 1</xyz></axis></joint>
+      <joint name="rl_wheel_joint" type="revolute"><parent>rl_steer_link</parent><child>rl_wheel</child><axis><xyz>0 0 1</xyz></axis></joint>
+
+      <!-- RR -->
+      <link name="rr_steer_link"><pose relative_to="base_link">-0.4 -0.4 0 0 0 0</pose></link>
+      <link name="rr_wheel"><pose relative_to="rr_steer_link">0 0 0 -1.5708 0 0</pose>
+        <inertial>
+          <mass>0.5</mass>
+        </inertial>
+        <visual name="visual"><geometry><cylinder><radius>0.1</radius><length>0.05</length></cylinder></geometry></visual>
+        <collision name="collision"><geometry><cylinder><radius>0.1</radius><length>0.05</length></cylinder></geometry></collision>
+      </link>
+      <joint name="rr_steer_joint" type="revolute"><parent>base_link</parent><child>rr_steer_link</child><axis><xyz>0 0 1</xyz></axis></joint>
+      <joint name="rr_wheel_joint" type="revolute"><parent>rr_steer_link</parent><child>rr_wheel</child><axis><xyz>0 0 1</xyz></axis></joint>
+
+      <!-- 各ジョイント用プラグイン -->
+      <!-- ステアリング joints -->
+      <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>fl_steer_joint</joint_name><topic>fl_steer_joint</topic>
+      </plugin>
+      <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>fr_steer_joint</joint_name><topic>fr_steer_joint</topic>
+      </plugin>
+      <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>rl_steer_joint</joint_name><topic>rl_steer_joint</topic>
+      </plugin>
+      <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>rr_steer_joint</joint_name><topic>rr_steer_joint</topic>
+      </plugin>
+
+      <!-- 駆動 joints -->
+      <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>fl_wheel_joint</joint_name><topic>fl_wheel_joint/cmd_vel</topic>
+        <p_gain>50.0</p_gain>
+        <i_gain>0.0</i_gain>
+        <d_gain>0.3</d_gain>
+      </plugin>
+      <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>fr_wheel_joint</joint_name><topic>fr_wheel_joint/cmd_vel</topic>
+        <p_gain>50.0</p_gain>
+        <i_gain>0.0</i_gain>
+        <d_gain>0.3</d_gain>
+      </plugin>
+      <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>rl_wheel_joint</joint_name><topic>rl_wheel_joint/cmd_vel</topic>
+        <p_gain>50.0</p_gain>
+        <i_gain>0.0</i_gain>
+        <d_gain>0.3</d_gain>
+      </plugin>
+      <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>rr_wheel_joint</joint_name><topic>rr_wheel_joint/cmd_vel</topic>
+        <p_gain>50.0</p_gain>
+        <i_gain>0.0</i_gain>
+        <d_gain>0.3</d_gain>
+      </plugin>
+
+      <plugin name="gz::sim::v8::systems::JointStatePublisher" filename="gz-sim-joint-state-publisher-system">
+        <joint_name>fl_steer_joint</joint_name>
+        <joint_name>fr_steer_joint</joint_name>
+        <joint_name>rl_steer_joint</joint_name>
+        <joint_name>rr_steer_joint</joint_name>
+        <topic>steer_state</topic>
+      </plugin>
+      <plugin name="gz::sim::v8::systems::JointStatePublisher" filename="gz-sim-joint-state-publisher-system">
+        <joint_name>fl_wheel_joint</joint_name>
+        <joint_name>fr_wheel_joint</joint_name>
+        <joint_name>rl_wheel_joint</joint_name>
+        <joint_name>rr_wheel_joint</joint_name>
+        <topic>wheel_state</topic>
+      </plugin>
+    </model>
+  </world>
+</sdf>
